@@ -23,8 +23,11 @@ public class Main {
         sortedCities.forEach(System.out::println);
 
         City[] citiesArray = cities.toArray(City[]::new);
-        int maxPopulationIndex = maxPopulation(citiesArray);
-        System.out.format("[%s] = %s", maxPopulationIndex, citiesArray[maxPopulationIndex].getPopulation());
+        int maxPopulationIndex = findMaxPopulationIndex(citiesArray);
+        System.out.format("\n[%s] = %s\n\n", maxPopulationIndex, citiesArray[maxPopulationIndex].getPopulation());
+
+        Map<String, Integer> numberOfCitiesInRegions = countCitiesInRegions(cities);
+        numberOfCitiesInRegions.forEach((region, citiesNumber) -> System.out.format("%s - %s\n", region, citiesNumber));
     }
 
     private static String getDataPath(String directoryName) {
@@ -61,7 +64,7 @@ public class Main {
                 .collect(toList());
     }
 
-    private static int maxPopulation(City[] cities) {
+    private static int findMaxPopulationIndex(City[] cities) {
         int maxPopulationIndex = 0;
         for (int i = 1; i < cities.length; i++) {
             if (cities[i].getPopulation() > cities[maxPopulationIndex].getPopulation()) {
@@ -69,5 +72,20 @@ public class Main {
             }
         }
         return maxPopulationIndex;
+    }
+
+    private static Map<String, Integer> countCitiesInRegions(List<City> cities) {
+        Map<String, Integer> map = new HashMap<>();
+        for (City city: cities) {
+            String region = city.getRegion();
+            Integer cityCounter = map.get(region);
+            if (cityCounter == null) {
+                map.put(region, 1);
+            } else {
+                cityCounter++;
+                map.put(region, cityCounter);
+            }
+        }
+        return map;
     }
 }
