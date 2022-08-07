@@ -5,10 +5,7 @@ import com.redfox.citiesdirectory.model.City;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -18,11 +15,16 @@ public class Main {
         String fileName = "Задача ВС Java Сбер.csv";
         String directoryName = "data";
         String dataPath = getDataPath(directoryName);
+        List<City> cities = loadExistedData(dataPath, fileName);
 
         Comparator<City> comparatorByName = Comparator.comparing(City::getName, String::compareToIgnoreCase);
         Comparator<City> comparatorByDistrictAndName = Comparator.comparing(City::getDistrict).thenComparing(City::getName);
+        List<City> sortedCities = sort(cities, comparatorByDistrictAndName);
+        sortedCities.forEach(System.out::println);
 
-        printExistedData(dataPath, fileName, comparatorByDistrictAndName);
+        City[] citiesArray = cities.toArray(City[]::new);
+        int maxPopulationIndex = maxPopulation(citiesArray);
+        System.out.format("[%s] = %s", maxPopulationIndex, citiesArray[maxPopulationIndex].getPopulation());
     }
 
     private static String getDataPath(String directoryName) {
@@ -31,19 +33,13 @@ public class Main {
                 .toString();
     }
 
-    private static void printExistedData(String dataPath, String fileName, Comparator<City> comparator) {
+    private static List<City> loadExistedData(String dataPath, String fileName) {
         try {
-            List<City> cities = sortData(dataPath, fileName, comparator);
-            cities.forEach(System.out::println);
+            return readData(dataPath, fileName);
         } catch (FileNotFoundException exception) {
             System.out.println("File '" + fileName + "' not found in '" + dataPath + "'");
+            return Collections.emptyList();
         }
-    }
-
-    private static List<City> sortData(String dataPath, String fileName, Comparator<City> comparator) throws FileNotFoundException {
-        return readData(dataPath, fileName).stream()
-                .sorted(comparator.reversed())
-                .collect(toList());
     }
 
     private static List<City> readData(String dataPath, String fileName) throws FileNotFoundException {
@@ -57,5 +53,21 @@ public class Main {
             }
         }
         return cities;
+    }
+
+    private static List<City> sort(List<City> cities, Comparator<City> comparator) {
+        return cities.stream()
+                .sorted(comparator.reversed())
+                .collect(toList());
+    }
+
+    private static int maxPopulation(City[] cities) {
+        int maxPopulationIndex = 0;
+        for (int i = 1; i < cities.length; i++) {
+            if (cities[i].getPopulation() > cities[maxPopulationIndex].getPopulation()) {
+                maxPopulationIndex = i;
+            }
+        }
+        return maxPopulationIndex;
     }
 }
