@@ -1,33 +1,29 @@
 package com.redfox.citiesdirectory;
 
 import com.redfox.citiesdirectory.model.City;
+import com.redfox.citiesdirectory.util.CityScanner;
+import com.redfox.citiesdirectory.util.CityUtil;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Paths;
-import java.util.*;
-
-import static java.util.stream.Collectors.toList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
 
     public static void main(String[] args) {
         String fileName = "Задача ВС Java Сбер.csv";
         String directoryName = "data";
+
         String dataPath = getDataPath(directoryName);
-        List<City> cities = loadExistedData(dataPath, fileName);
+        List<City> cities = CityScanner.loadExistedData(dataPath, fileName);
 
         Comparator<City> comparatorByName = Comparator.comparing(City::getName, String::compareToIgnoreCase);
         Comparator<City> comparatorByDistrictAndName = Comparator.comparing(City::getDistrict).thenComparing(City::getName);
-        List<City> sortedCities = sort(cities, comparatorByDistrictAndName);
-        sortedCities.forEach(System.out::println);
+        printSortedCities(cities, comparatorByDistrictAndName);
 
-        City[] citiesArray = cities.toArray(City[]::new);
-        int maxPopulationIndex = findMaxPopulationIndex(citiesArray);
-        System.out.format("\n[%s] = %s\n\n", maxPopulationIndex, citiesArray[maxPopulationIndex].getPopulation());
-
-        Map<String, Integer> numberOfCitiesInRegions = countCitiesInRegions(cities);
-        numberOfCitiesInRegions.forEach((region, citiesNumber) -> System.out.format("%s - %s\n", region, citiesNumber));
+        printMaxPopulation(cities);
+        printNumberOfCitiesByRegions(cities);
     }
 
     private static String getDataPath(String directoryName) {
@@ -36,56 +32,19 @@ public class Main {
                 .toString();
     }
 
-    private static List<City> loadExistedData(String dataPath, String fileName) {
-        try {
-            return readData(dataPath, fileName);
-        } catch (FileNotFoundException exception) {
-            System.out.println("File '" + fileName + "' not found in '" + dataPath + "'");
-            return Collections.emptyList();
-        }
+    private static void printSortedCities(List<City> cities, Comparator<City> comparatorByDistrictAndName) {
+        List<City> sortedCities = CityUtil.sort(cities, comparatorByDistrictAndName);
+        sortedCities.forEach(System.out::println);
     }
 
-    private static List<City> readData(String dataPath, String fileName) throws FileNotFoundException {
-        List<City> cities = new ArrayList<>();
-        try (Scanner scanner = new Scanner(new File(dataPath, fileName))) {
-            while (scanner.hasNextLine()) {
-                String row = scanner.nextLine();
-                String[] data = row.split(";");
-                City city = new City(data[1], data[2], data[3], Integer.parseInt(data[4]), data.length == 6 ? data[5] : "");
-                cities.add(city);
-            }
-        }
-        return cities;
+    private static void printMaxPopulation(List<City> cities) {
+        City[] citiesArray = cities.toArray(City[]::new);
+        int maxPopulationIndex = CityUtil.findMaxPopulationIndex(citiesArray);
+        System.out.format("\n[%s] = %s\n\n", maxPopulationIndex, citiesArray[maxPopulationIndex].getPopulation());
     }
 
-    private static List<City> sort(List<City> cities, Comparator<City> comparator) {
-        return cities.stream()
-                .sorted(comparator.reversed())
-                .collect(toList());
-    }
-
-    private static int findMaxPopulationIndex(City[] cities) {
-        int maxPopulationIndex = 0;
-        for (int i = 1; i < cities.length; i++) {
-            if (cities[i].getPopulation() > cities[maxPopulationIndex].getPopulation()) {
-                maxPopulationIndex = i;
-            }
-        }
-        return maxPopulationIndex;
-    }
-
-    private static Map<String, Integer> countCitiesInRegions(List<City> cities) {
-        Map<String, Integer> map = new HashMap<>();
-        for (City city: cities) {
-            String region = city.getRegion();
-            Integer cityCounter = map.get(region);
-            if (cityCounter == null) {
-                map.put(region, 1);
-            } else {
-                cityCounter++;
-                map.put(region, cityCounter);
-            }
-        }
-        return map;
+    private static void printNumberOfCitiesByRegions(List<City> cities) {
+        Map<String, Integer> numberOfCitiesByRegions = CityUtil.countCitiesByRegions(cities);
+        numberOfCitiesByRegions.forEach((region, citiesNumber) -> System.out.format("%s - %s\n", region, citiesNumber));
     }
 }

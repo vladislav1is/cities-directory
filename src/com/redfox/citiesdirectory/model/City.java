@@ -9,6 +9,9 @@ public class City {
     private int population;
     private String foundation;
 
+    public City() {
+    }
+
     public City(String name, String region, String district, int population, String foundation) {
         this.name = name;
         this.region = region;
